@@ -40,5 +40,7 @@ def watch_thread(thread):
             print('{} {} --{}'.format(ts, body.encode('utf-8'), author.encode('utf-8')))
         time.sleep(5)
 
-watch_thread(sys.argv[1])
+if __name__ == '__main__':
+    url_path = sys.argv[1] if len(sys.argv) > 1 else 'api/v1/me'
+    print(json.dumps(api_request(url_path).json()))
 

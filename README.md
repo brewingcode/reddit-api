@@ -9,7 +9,7 @@ $ cat ~/.reddit-live-cli-creds
 REDDIT_LIVE_CREDS=/p-jcoLKBynTLew/p-jcoLKBynTLew/reddit_bot/snoo
 export REDDIT_LIVE_CREDS
 $ source ~/.reddit-live-cli-creds
-$ get-url live/xnrdv28vxfi2 | jq .
+$ ./reddit_live_cli.py live/xnrdv28vxfi2 | jq .
 {
   "kind": "Listing",
   "data": {
@@ -30,6 +30,12 @@ $ get-url live/xnrdv28vxfi2 | jq .
         }
       },
       ...
+
+$ ./watch_thread xnrdv28vxfi2
+2016-09-27T20:03:57+00:00 https://twitter.com/NASASpaceflight/status/780860452024745985 --Zucal
+2016-09-27T20:04:09+00:00 Now moving into Q&amp;A. --Wetmelon
+2016-09-27T20:04:58+00:00 Question is about manufacturing site, and prepping the Cape Canaveral launch site. --Zucal
+2016-09-27T20:05:13+00:00 https://twitter.com/NASASpaceflight/status/780860701623607296 --Zucal
 ```
 
 ## oauth credentials

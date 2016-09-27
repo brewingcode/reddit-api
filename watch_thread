@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import reddit_live_cli
+import sys
+reddit_live_cli.watch_thread(sys.argv[1])
+
