@@ -22,7 +22,7 @@ def api_request(url):
         auth=client_auth, data=post_data, headers=headers)
     token = response.json()['access_token']
     headers = {"Authorization": "bearer "+token, "User-Agent": user_agent}
-    return requests.get("https://oauth.reddit.com/"+api_url, headers=headers)
+    return requests.get("https://oauth.reddit.com/"+url, headers=headers)
 
 api_url = sys.argv[1] if len(sys.argv) > 1 else 'api/v1/me'
 print(json.dumps(api_request(api_url).json()))
