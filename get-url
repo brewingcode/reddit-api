@@ -6,11 +6,6 @@ import sys
 import json
 
 def unpack_creds():
-    # need your 4 credentials, separated by a character that doesn't occur
-    # in any of the 4 credentials. if you're following the example here:
-    # https://github.com/reddit/reddit/wiki/OAuth2-Quick-Start-Example
-    #     /p-jcoLKBynTLew/p-jcoLKBynTLew/reddit_bot/snoo
-    # (that's app ID, app secret, reddit username, and reddit password)
     env_var = os.environ['REDDIT_LIVE_CREDS']
     sep_char = env_var[0]
     return env_var[1:].split(sep_char)
