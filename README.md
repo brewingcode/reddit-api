@@ -6,7 +6,7 @@ Python scripts that do stuff with the Reddit API.
 
 ```
 $ cat ~/.reddit-creds
-REDDIT_CREDS=/p-jcoLKBynTLew/p-jcoLKBynTLew/reddit_bot/snoo
+REDDIT_CREDS=/p-jcoLKBynTLew/gko_LXELoV07ZBNUXrvWZfzE3aI/reddit_bot/snoo
 export REDDIT_CREDS
 $ source ~/.reddit-creds
 $ ./api.py live/xnrdv28vxfi2 | jq .
@@ -56,4 +56,7 @@ The first two should be pulled from a "personal use script" that is associated
 with your reddit account. See the getting started guide here:
 
 https://github.com/reddit/reddit/wiki/OAuth2-Quick-Start-Example
+
+The last two are your reddit username and password, exactly as you would
+expect.
 
