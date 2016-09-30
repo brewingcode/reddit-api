@@ -8,12 +8,12 @@ import arrow
 import time
 
 def unpack_creds():
-    env_var = os.environ['REDDIT_LIVE_CREDS']
+    env_var = os.environ['REDDIT_CREDS']
     sep_char = env_var[0]
     return env_var[1:].split(sep_char)
 
 def api_request(url):
-    user_agent = "reddit-live-cli/0.1"
+    user_agent = "reddit-api/0.1"
     app_id, app_secret, username, password = unpack_creds()
     client_auth = requests.auth.HTTPBasicAuth(app_id, app_secret)
     post_data = {"grant_type": "password",

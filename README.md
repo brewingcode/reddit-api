@@ -1,15 +1,15 @@
-# reddit-live-cli
+# reddit-api
 
-This is a python script that does stuff with the Reddit API.
+Python scripts that do stuff with the Reddit API.
 
 ## example
 
 ```
-$ cat ~/.reddit-live-cli-creds
-REDDIT_LIVE_CREDS=/p-jcoLKBynTLew/p-jcoLKBynTLew/reddit_bot/snoo
-export REDDIT_LIVE_CREDS
-$ source ~/.reddit-live-cli-creds
-$ ./reddit_live_cli.py live/xnrdv28vxfi2 | jq .
+$ cat ~/.reddit-creds
+REDDIT_CREDS=/p-jcoLKBynTLew/p-jcoLKBynTLew/reddit_bot/snoo
+export REDDIT_CREDS
+$ source ~/.reddit-creds
+$ ./api.py live/xnrdv28vxfi2 | jq .
 {
   "kind": "Listing",
   "data": {
@@ -40,10 +40,10 @@ $ ./watch_thread xnrdv28vxfi2
 
 ## oauth credentials
 
-Your credentials are passed via the `REDDIT_LIVE_CREDS` environment
-variable. This is simply four credentials, separated by a character of
-your choice. Clearly, make sure the separating character does not occur
-in any of the four credentials.
+Your credentials are passed via the `REDDIT_CREDS` environment variable. This
+is simply four credentials, separated by a character of your choice. Clearly,
+make sure the separating character does not occur in any of the four
+credentials.
 
 The four credentials, in order, are:
 
@@ -52,8 +52,8 @@ The four credentials, in order, are:
 3. Reddit username
 4. Reddit pasword
 
-The first two should be pulled from a "personal use script" that is
-associated with your reddit account. See the getting started guide here:
+The first two should be pulled from a "personal use script" that is associated
+with your reddit account. See the getting started guide here:
 
 https://github.com/reddit/reddit/wiki/OAuth2-Quick-Start-Example
 
