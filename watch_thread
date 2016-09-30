@@ -2,5 +2,19 @@
 
 import api
 import sys
-api.watch_thread(sys.argv[1])
+import arrow
+import time
+
+most_recent = 0
+while True:
+    response = api.api_request('live/'+sys.argv[1]).json()
+    posts = response['data']['children']
+    posts.reverse()
+    for post in filter(lambda x: x['data']['created_utc'] > most_recent, posts):
+        most_recent = post['data']['created_utc']
+        body = post['data']['body']
+        author = post['data']['author']
+        ts = arrow.get(post['data']['created_utc'])
+        print('{} {} --{}'.format(ts, body.encode('utf-8'), author.encode('utf-8')))
+    time.sleep(5)
 
