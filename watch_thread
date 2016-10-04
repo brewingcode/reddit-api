@@ -4,17 +4,36 @@ import api
 import sys
 import arrow
 import time
+import requests
+import bs4
+import re
 
-most_recent = 0
-while True:
-    response = api.api_request('live/'+sys.argv[1]).json()
-    posts = response['data']['children']
-    posts.reverse()
-    for post in filter(lambda x: x['data']['created_utc'] > most_recent, posts):
-        most_recent = post['data']['created_utc']
-        body = post['data']['body']
-        author = post['data']['author']
-        ts = arrow.get(post['data']['created_utc'])
-        print('{} {} --{}'.format(ts, body.encode('utf-8'), author.encode('utf-8')))
-    time.sleep(5)
+def watch(live_id):
+    most_recent = 0
+    while True:
+        response = api.api_request('live/'+live_id).json()
+        posts = response['data']['children']
+        posts.reverse()
+        for post in filter(lambda x: x['data']['created_utc'] > most_recent, posts):
+            most_recent = post['data']['created_utc']
+            body = post['data']['body']
+            author = post['data']['author']
+            ts = arrow.get(post['data']['created_utc'])
+            print('{} {} --{}'.format(ts, body.encode('utf-8'), author.encode('utf-8')))
+        time.sleep(5)
+
+if len(sys.argv) == 2:
+    watch(sys.argv[1])
+else:
+    # todo: remove this when reddit's api at `/live/happening-now` is working. it
+    # is currently 404'g when there is in fact a live thread on the front page
+    ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36'
+    html = requests.get('https://www.reddit.com/', headers={'User-Agent': ua}).text
+    soup = bs4.BeautifulSoup(html, 'html.parser')
+    divs = soup.select('.happening-now-wrap')
+    if len(divs):
+        m = re.search(r'/live/(\w+)', divs[0]['href'])
+        watch(m.group(1))
+    else:
+        print("no current live thread on front page, pass in the thread ID to watch")
 
