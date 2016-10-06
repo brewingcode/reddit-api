@@ -5,25 +5,26 @@ import sys
 import arrow
 import time
 
+def print_post(post):
+    body = post['data']['body'].strip()
+    author = post['data']['author']
+    ts = arrow.get(post['data']['created_utc']).to('local').format('h:mma')
+    print('{} {}\n{}\n'.format(ts, author.encode('utf-8'), body.encode('utf-8')))
+
 def watch(live_id):
     about = api.api_request('live/'+live_id+'/about').json()['data']
-    print('{}\n{} viewers, created {}\n{}'.format(about['title'].encode('utf-8'),
-        about['viewer_count'], arrow.get(about['created_utc']).humanize(),
+    fmt = '{}\n{} viewers, created {} at https://www.reddit.com/live/{}\n{}\n'
+    print(fmt.format(about['title'].encode('utf-8'), about['viewer_count'],
+        arrow.get(about['created_utc']).humanize(), about['id'],
         about['description'].encode('utf-8')))
     time.sleep(5)
 
-    most_recent = 0
-    while True:
-        response = api.api_request('live/'+live_id).json()
-        posts = response['data']['children']
-        posts.reverse()
-        for post in filter(lambda x: x['data']['created_utc'] > most_recent, posts):
-            most_recent = post['data']['created_utc']
-            body = post['data']['body'].strip()
-            author = post['data']['author']
-            ts = arrow.get(post['data']['created_utc']).to('local').format('h:mma')
-            print('{} {}\n{}\n'.format(ts, author.encode('utf-8'), body.encode('utf-8')))
-        time.sleep(5)
+    posts = api.api_request('live/'+live_id).json()['data']['children']
+    while len(posts) > 10:
+        posts.pop()
+    posts.reverse()
+    for post in posts:
+        print_post(post)
 
 if len(sys.argv) == 2:
     watch(sys.argv[1])
