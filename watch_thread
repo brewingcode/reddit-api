@@ -4,6 +4,35 @@ import api
 import sys
 import arrow
 import time
+import websocket
+import json
+import os
+import logging
+
+def ws_watch(thread_id, ws_url):
+    logger = logging.getLogger('websocket')
+    logger.setLevel(logging.ERROR)
+    logger.addHandler(logging.StreamHandler())
+
+    def on_message(ws, message):
+        m = json.loads(message)
+        if m['type'] == 'update':
+            print_post(m['payload'])
+        elif m['type'] == 'complete':
+            print('live thread has been completed, quitting')
+            os._exit(0)
+
+    def on_error(ws, err):
+        if isinstance(err, KeyboardInterrupt):
+            os._exit(0)
+        print('websockets error: ', err)
+
+    def on_close(ws):
+        watch(thread_id)
+
+    ws = websocket.WebSocketApp(ws_url, on_message=on_message, on_error=on_error,
+        on_close=on_close)
+    ws.run_forever()
 
 def print_post(post):
     body = post['data']['body'].strip()
@@ -25,6 +54,7 @@ def watch(live_id):
     posts.reverse()
     for post in posts:
         print_post(post)
+    ws_watch(live_id, about['websocket_url'])
 
 if len(sys.argv) == 2:
     watch(sys.argv[1])
