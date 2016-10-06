@@ -15,7 +15,7 @@ def watch(live_id):
             most_recent = post['data']['created_utc']
             body = post['data']['body'].strip()
             author = post['data']['author']
-            ts = arrow.get(post['data']['created_utc'])
+            ts = arrow.get(post['data']['created_utc']).to('local').format('h:mma')
             print('{} {}\n{}\n'.format(ts, author.encode('utf-8'), body.encode('utf-8')))
         time.sleep(5)
 
