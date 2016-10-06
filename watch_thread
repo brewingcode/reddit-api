@@ -6,6 +6,12 @@ import arrow
 import time
 
 def watch(live_id):
+    about = api.api_request('live/'+live_id+'/about').json()['data']
+    print('{}\n{} viewers, created {}\n{}'.format(about['title'].encode('utf-8'),
+        about['viewer_count'], arrow.get(about['created_utc']).humanize(),
+        about['description'].encode('utf-8')))
+    time.sleep(5)
+
     most_recent = 0
     while True:
         response = api.api_request('live/'+live_id).json()
