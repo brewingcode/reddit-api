@@ -4,6 +4,7 @@ import requests
 import os
 import sys
 import json
+import arrow
 
 def unpack_creds():
     env_var = os.environ['REDDIT_CREDS']
@@ -24,7 +25,15 @@ def api_request(url):
     headers = {"Authorization": "bearer "+token, "User-Agent": user_agent}
     return requests.get("https://oauth.reddit.com/"+url, headers=headers)
 
+def live_thread_post(post, action='print'):
+    if action == 'print':
+        body = post['body'].strip()
+        author = post['author']
+        ts = arrow.get(post['created_utc']).to('local').format('h:mma')
+        print('{} {}\n{}\n'.format(ts, author.encode('utf-8'), body.encode('utf-8')))
+    else:
+        pass
+
 if __name__ == '__main__':
     url_path = sys.argv[1] if len(sys.argv) > 1 else 'api/v1/me'
     print(json.dumps(api_request(url_path).json()))
-

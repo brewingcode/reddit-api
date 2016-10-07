@@ -17,7 +17,7 @@ def ws_watch(thread_id, ws_url):
     def on_message(ws, message):
         m = json.loads(message)
         if m['type'] == 'update':
-            print_post(m['payload'])
+            api.live_thread_post(m['payload']['data'])
         elif m['type'] == 'complete':
             print('live thread has been completed, quitting')
             os._exit(0)
@@ -34,12 +34,6 @@ def ws_watch(thread_id, ws_url):
         on_close=on_close)
     ws.run_forever()
 
-def print_post(post):
-    body = post['data']['body'].strip()
-    author = post['data']['author']
-    ts = arrow.get(post['data']['created_utc']).to('local').format('h:mma')
-    print('{} {}\n{}\n'.format(ts, author.encode('utf-8'), body.encode('utf-8')))
-
 def watch(live_id):
     about = api.api_request('live/'+live_id+'/about').json()['data']
     fmt = '{}\n{} viewers, created {} at https://www.reddit.com/live/{}\n{}\n'
@@ -53,7 +47,7 @@ def watch(live_id):
         posts.pop()
     posts.reverse()
     for post in posts:
-        print_post(post)
+        api.live_thread_post(post['data'])
     ws_watch(live_id, about['websocket_url'])
 
 if len(sys.argv) == 2:
@@ -64,4 +58,3 @@ else:
         watch(r.json()['data']['id'])
     else:
         print("no 'happening now' live thread, pass in the thread ID to watch")
-
