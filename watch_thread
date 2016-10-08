@@ -21,7 +21,7 @@ def start_thread(live_id):
     time.sleep(5)
 
     posts = api.api_request('live/'+live_id).json()['data']['children']
-    while len(posts) > 10:
+    while len(posts) > 5:
         posts.pop()
     posts.reverse()
     for post in posts:
@@ -140,7 +140,13 @@ def main():
 
     while True:
         try:
-            message = console.read()
+            cmd = console.read()
+            if cmd == 'rs':
+                ws.send_close()
+                ws = websocket.create_connection(url)
+            elif cmd == 'quit':
+                return
+
         except KeyboardInterrupt:
             return
         except EOFError:
