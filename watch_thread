@@ -7,34 +7,12 @@ import time
 import websocket
 import json
 import os
-import logging
+import six
+import code
+import argparse
+import threading
 
-def ws_watch(thread_id, ws_url):
-    logger = logging.getLogger('websocket')
-    logger.setLevel(logging.ERROR)
-    logger.addHandler(logging.StreamHandler())
-
-    def on_message(ws, message):
-        m = json.loads(message)
-        if m['type'] == 'update':
-            api.live_thread_post(m['payload']['data'])
-        elif m['type'] == 'complete':
-            print('live thread has been completed, quitting')
-            os._exit(0)
-
-    def on_error(ws, err):
-        if isinstance(err, KeyboardInterrupt):
-            os._exit(0)
-        print('websockets error: ', err)
-
-    def on_close(ws):
-        watch(thread_id)
-
-    ws = websocket.WebSocketApp(ws_url, on_message=on_message, on_error=on_error,
-        on_close=on_close)
-    ws.run_forever()
-
-def watch(live_id):
+def start_thread(live_id):
     about = api.api_request('live/'+live_id+'/about').json()['data']
     fmt = '{}\n{} viewers, created {} at https://www.reddit.com/live/{}\n{}\n'
     print(fmt.format(about['title'].encode('utf-8'), about['viewer_count'],
@@ -48,13 +26,126 @@ def watch(live_id):
     posts.reverse()
     for post in posts:
         api.live_thread_post(post['data'])
-    ws_watch(live_id, about['websocket_url'])
 
-if len(sys.argv) == 2:
-    watch(sys.argv[1])
-else:
-    r = api.api_request('api/live/happening_now')
-    if r.status_code == 200:
-        watch(r.json()['data']['id'])
+    return about['websocket_url']
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Reddit live thread tool")
+    parser.add_argument("-v", "--verbose", action='store_true',
+                        help="Set verbose mode")
+    parser.add_argument("-r", "--raw", action="store_true",
+                        help="Raw output (non-interactive)")
+    parser.add_argument("--eof-wait", default=0, type=int,
+                        help="Wait time (seconds) after 'EOF' received")
+    parser.add_argument("-i", "--id",
+                        help="Specify live thread ID to watch")
+    return parser.parse_args()
+
+class RawInput():
+    def raw_input(self, prompt):
+        if six.PY3:
+            line = input(prompt)
+        else:
+            line = raw_input(prompt)
+
+        return line.encode("utf-8")
+
+class InteractiveConsole(RawInput, code.InteractiveConsole):
+    def write(self, data):
+        sys.stdout.write("\033[2K\033[E")
+        # sys.stdout.write("\n")
+        sys.stdout.write("\033[34m< " + data + "\033[39m")
+        sys.stdout.write("\n> ")
+        sys.stdout.flush()
+
+    def read(self):
+        return self.raw_input("> ")
+
+class NonInteractive(RawInput):
+    def write(self, data):
+        sys.stdout.write(data)
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+
+    def read(self):
+        return self.raw_input("")
+
+def main():
+    start_time = time.time()
+    args = parse_args()
+    if args.verbose:
+        websocket.enableTrace(True)
+    if args.raw:
+        console = NonInteractive()
     else:
-        print("no 'happening now' live thread, pass in the thread ID to watch")
+        console = InteractiveConsole()
+
+    if not args.id:
+        r = api.api_request('api/live/happening_now')
+        if r.status_code == 200:
+            args.id = r.json()['data']['id']
+        else:
+            print("no 'happening now' live thread, pass in a thread ID with --id")
+            return
+
+    url = start_thread(args.id)
+    ws = websocket.create_connection(url)
+
+    def on_message(message):
+        m = json.loads(message)
+        if m['type'] == 'update':
+            api.live_thread_post(m['payload']['data'])
+        elif m['type'] == 'complete':
+            print('live thread has been completed, quitting')
+            raise websocket.WebSocketException('Live thread marked as complete')
+
+    def recv():
+        OPCODE_DATA = (websocket.ABNF.OPCODE_TEXT, websocket.ABNF.OPCODE_BINARY)
+        try:
+            frame = ws.recv_frame()
+        except websocket.WebSocketException:
+            return (websocket.ABNF.OPCODE_CLOSE, None)
+        if not frame:
+            raise websocket.WebSocketException("Not a valid frame %s" % frame)
+        elif frame.opcode in OPCODE_DATA:
+            return (frame.opcode, frame.data)
+        elif frame.opcode == websocket.ABNF.OPCODE_CLOSE:
+            ws.send_close()
+            return (frame.opcode, None)
+        elif frame.opcode == websocket.ABNF.OPCODE_PING:
+            ws.pong(frame.data)
+            return frame.opcode, frame.data
+
+        return frame.opcode, frame.data
+
+    def recv_ws():
+        while True:
+            opcode, data = recv()
+            msg = None
+            if six.PY3 and opcode == websocket.ABNF.OPCODE_TEXT and isinstance(data, bytes):
+                data = str(data, "utf-8")
+
+            if args.verbose:
+                print("%s: %s" % (websocket.ABNF.OPCODE_MAP.get(opcode), data))
+
+            if data is not None and opcode == websocket.ABNF.OPCODE_TEXT:
+                on_message(data)
+
+            if opcode == websocket.ABNF.OPCODE_CLOSE:
+                break
+
+    thread = threading.Thread(target=recv_ws)
+    thread.daemon = True
+    thread.start()
+
+    while True:
+        try:
+            message = console.read()
+        except KeyboardInterrupt:
+            return
+        except EOFError:
+            time.sleep(args.eof_wait)
+            return
+
+if __name__ == "__main__":
+    main()
