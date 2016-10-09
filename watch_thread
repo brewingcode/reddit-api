@@ -81,6 +81,9 @@ def main():
             return
 
     url = start_thread(args.id)
+    if not url:
+        print("thread has ended, quitting")
+        return
     ws = websocket.create_connection(url)
 
     def on_message(message):
