@@ -37,6 +37,8 @@ def parse_args():
                         help="Wait time (seconds) after 'EOF' received")
     parser.add_argument("-i", "--id",
                         help="Specify live thread ID to watch")
+    parser.add_argument("--changelog", action="store_true",
+                        help="reddit changelog live thread")
     return parser.parse_args()
 
 class RawInput():
@@ -71,6 +73,9 @@ def main():
         console = NonInteractive()
     else:
         console = InteractiveConsole()
+
+    if args.changelog:
+        args.id = 'ukaeu1ik4sw5'
 
     if not args.id:
         r = api.api_request('api/live/happening_now')
